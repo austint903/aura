@@ -48,7 +48,7 @@ function AuthForm({type}:Props) {
                     router.replace("/");
                 }
             } else {
-                toast("There was an error signing up. Please try again");
+                toast(errorMessage);
             }
         });
     };

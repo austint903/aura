@@ -2,6 +2,7 @@
 
 import { createClient } from "@/auth/server";
 import { handleError } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const loginAction = async (email: string, password: string) => {
     try {
@@ -36,6 +37,20 @@ export const signUpAction = async (email:string, password:string)=>{
     try{
         const supabase = await createClient();
         const {auth} = supabase;
+
+        //check if the user is already in the table --> tell them to login
+        const {data:existingUsers, error:selectError}=await supabase
+        .from("Users")
+        .select("id")
+        .eq("email", email);
+
+        if (selectError) throw selectError;
+
+        if ( existingUsers && existingUsers.length>0){
+            return { errorMessage: "User already exists, please login instead." };
+        }
+
+
         const {data, error} = await auth.signUp({
             email, 
             password,
