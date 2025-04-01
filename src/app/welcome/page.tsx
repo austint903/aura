@@ -19,7 +19,7 @@ function WelcomePage() {
         <div>
             Welcome.
             <p>
-                a beginners guide to understanding trading alogrithms.
+                For college students, by college students. 
             </p>
             <div>
                 <Button variant={"white"} onClick={handleWelcomeLogin}> Login</Button>
