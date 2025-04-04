@@ -2,7 +2,6 @@
 
 import { createClient } from "@/auth/server";
 import { handleError } from "@/lib/utils";
-import { toast } from "sonner";
 
 export const loginAction = async (email: string, password: string) => {
     try {
