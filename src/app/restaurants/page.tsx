@@ -13,8 +13,9 @@ interface Restaurant {
     image_url: string;
 }
 
-interface User{
-    id:string;
+interface User {
+    first_name: string;
+    last_name: string;
 }
 
 export default function RestaurantsPage() {
@@ -28,8 +29,8 @@ export default function RestaurantsPage() {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    
-    
+
+
     //fetch resturants
     async function fetchRestaurants() {
         setLoading(true);
@@ -45,7 +46,7 @@ export default function RestaurantsPage() {
 
     // runs on component mount
     useEffect(() => {
-        
+
         fetchRestaurants();
     }, []);
 
@@ -86,7 +87,7 @@ export default function RestaurantsPage() {
         }
     }
 
-    
+
 
     return (
         <div>
@@ -161,7 +162,7 @@ export default function RestaurantsPage() {
                                     className="mb-4"
                                 />
                             )}
-                            
+
 
                         </li>
                     ))}

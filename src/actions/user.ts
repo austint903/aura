@@ -31,18 +31,20 @@ export const logoutAction = async () => {
         return handleError(error);
     }
 };
-
-export const signUpAction = async (email: string, password: string) => {
-    
+export const signUpAction = async (
+    email: string,
+    password: string,
+    first_name: string,
+    last_name: string
+) => {
     try {
-        
-        if (!(email.toLowerCase().endsWith('.edu'))){
-            return {errorMessage: "Please use a .edu email address"};
+        if (!email.toLowerCase().endsWith('.edu')) {
+            return { errorMessage: "Please use a .edu email address" };
         }
         const supabase = await createClient();
         const { auth } = supabase;
 
-        //check if the user is already in the table --> tell them to login
+        //checks for duplicate users
         const { data: existingUsers, error: selectError } = await supabase
             .from("Users")
             .select("id")
@@ -54,7 +56,6 @@ export const signUpAction = async (email: string, password: string) => {
             return { errorMessage: "User already exists, please login instead." };
         }
 
-
         const { data, error } = await auth.signUp({
             email,
             password,
@@ -64,12 +65,10 @@ export const signUpAction = async (email: string, password: string) => {
         const userId = data.user?.id;
         if (!userId) throw new Error("There was an error signing up");
 
-
-        //users to access site are anon, so just updated policy to allow both authenticated 
-        // and anon to insert a new row into supabase.
+        // insert new user
         const { error: dbError } = await supabase
             .from("Users")
-            .insert({ email });
+            .insert({ email, first_name, last_name });
         if (dbError) throw dbError;
 
         return { errorMessage: null };
@@ -77,4 +76,3 @@ export const signUpAction = async (email: string, password: string) => {
         return handleError(error);
     }
 };
-
