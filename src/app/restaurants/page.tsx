@@ -11,6 +11,7 @@ interface Restaurant {
     latitude: number;
     longitude: number;
     image_url: string;
+    total_points: number;
 }
 
 interface User {
@@ -29,7 +30,7 @@ export default function RestaurantsPage() {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-
+    const [votedRestaurants, setVotedRestaurants] = useState<string[]>([]);
 
     //fetch resturants
     async function fetchRestaurants() {
@@ -46,7 +47,6 @@ export default function RestaurantsPage() {
 
     // runs on component mount
     useEffect(() => {
-
         fetchRestaurants();
     }, []);
 
@@ -54,6 +54,14 @@ export default function RestaurantsPage() {
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError("");
+
+        // ensure users enter all fields
+        const {name, description, latitude, longitude, image_url} = form;
+        if (!name.trim() || !description.trim() || !latitude.trim() || !longitude.trim() || !image_url.trim()){
+            setError("Please enter all fields");
+            return;
+        }
+
         try {
             const res = await fetch("/api/restaurants", {
                 method: "POST",
@@ -87,6 +95,37 @@ export default function RestaurantsPage() {
         }
     }
 
+    async function handleVote(restaurantId: string) {
+        //for now, clinet side prevents multiple votes --> chnage in the future
+        if (votedRestaurants.includes(restaurantId)) {
+          return;
+        }
+        try {
+            //feteches from the api with POST and body of current restaurantId, pass as json
+          const res = await fetch("/api/restaurants/vote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: restaurantId }),
+          });
+          //sees if there are errors on the server side
+          const data = await res.json();
+          if (!res.ok) {
+            setError(data.error || "error");
+          } else {
+            //updates local UI with new count
+            setRestaurants((prev) => //holds state of restaurant list before point increment
+                //loops through each restaurant
+              prev.map((r) =>
+                //checks if the restaurant is the one I just incremented. -> if yes, it retunrs a new list of restaurants
+                r.id === restaurantId ? { ...r, total_points: data.total_points } : r
+              )
+            );
+            setVotedRestaurants((prev) => [...prev, restaurantId]);
+          }
+        } catch (err) {
+          setError("Error");
+        }
+      }
 
 
     return (
@@ -162,7 +201,27 @@ export default function RestaurantsPage() {
                                     className="mb-4"
                                 />
                             )}
-
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  onClick={() => handleVote(restaurant.id)}
+                  disabled={votedRestaurants.includes(restaurant.id)}
+                  style={{
+                    color: votedRestaurants.includes(restaurant.id)
+                      ? "red"
+                      : "black",
+                    cursor: votedRestaurants.includes(restaurant.id)
+                      ? "default"
+                      : "pointer",
+                    background: "none",
+                    border: "none",
+                    fontSize: "1.5rem",
+                  }}
+                  title="Vote for this restaurant"
+                >
+                  🚩
+                </button>
+                <span>{restaurant.total_points || 0}</span>
+              </div>
 
                         </li>
                     ))}
