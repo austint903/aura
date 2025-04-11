@@ -68,7 +68,7 @@ export const signUpAction = async (
         // insert new user
         const { error: dbError } = await supabase
             .from("Users")
-            .insert({ email, first_name, last_name });
+            .insert({ id:userId,email, first_name, last_name });
         if (dbError) throw dbError;
 
         return { errorMessage: null };

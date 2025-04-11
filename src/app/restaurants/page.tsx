@@ -14,10 +14,6 @@ interface Restaurant {
     total_points: number;
 }
 
-interface User {
-    first_name: string;
-    last_name: string;
-}
 
 export default function RestaurantsPage() {
     const [form, setForm] = useState({
@@ -30,7 +26,7 @@ export default function RestaurantsPage() {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [votedRestaurants, setVotedRestaurants] = useState<string[]>([]);
+
 
     //fetch resturants
     async function fetchRestaurants() {
@@ -96,10 +92,8 @@ export default function RestaurantsPage() {
     }
 
     async function handleVote(restaurantId: string) {
+        setError("");
         //for now, clinet side prevents multiple votes --> chnage in the future
-        if (votedRestaurants.includes(restaurantId)) {
-          return;
-        }
         try {
             //feteches from the api with POST and body of current restaurantId, pass as json
           const res = await fetch("/api/restaurants/vote", {
@@ -120,7 +114,6 @@ export default function RestaurantsPage() {
                 r.id === restaurantId ? { ...r, total_points: data.total_points } : r
               )
             );
-            setVotedRestaurants((prev) => [...prev, restaurantId]);
           }
         } catch (err) {
           setError("Error");
@@ -204,14 +197,7 @@ export default function RestaurantsPage() {
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <button
                   onClick={() => handleVote(restaurant.id)}
-                  disabled={votedRestaurants.includes(restaurant.id)}
                   style={{
-                    color: votedRestaurants.includes(restaurant.id)
-                      ? "red"
-                      : "black",
-                    cursor: votedRestaurants.includes(restaurant.id)
-                      ? "default"
-                      : "pointer",
                     background: "none",
                     border: "none",
                     fontSize: "1.5rem",
