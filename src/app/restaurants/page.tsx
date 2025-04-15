@@ -1,5 +1,4 @@
 "use client";
-
 //client component since we need to use useEffect and browser specific APIs
 
 import { useState, useEffect, FormEvent } from "react";
@@ -12,7 +11,8 @@ interface Restaurant {
     longitude: number;
     image_url: string;
     total_points: number;
-    voted?: boolean; //flag to see if a restaurnt is voted for or not
+    voted?: boolean; //flag to see if a restaurant is voted for or not
+    username?: string; //username of the user who added the restaurant
 }
 
 export default function RestaurantsPage() {
@@ -27,14 +27,20 @@ export default function RestaurantsPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    //fetch restaurants
+    // fetch restaurants
     async function fetchRestaurants() {
         setLoading(true);
         try {
             const res = await fetch("/api/restaurants");
             const data = await res.json();
+            // Map over data to extract the nested username from the Users object.
+            // Adjust the property name if your relationship alias is different.
             setRestaurants(
-                data.map((r: Restaurant) => ({ ...r, voted: false }))
+                data.map((r: any) => ({
+                    ...r,
+                    voted: false,
+                    username: r.Users?.username, //try to get username
+                }))
             );
         } catch (err) {
             setError("Error fetching restaurants");
@@ -192,8 +198,7 @@ export default function RestaurantsPage() {
                             <h3>{restaurant.name}</h3>
                             <p>{restaurant.description}</p>
                             <p>
-                                Location: {restaurant.latitude},{" "}
-                                {restaurant.longitude}
+                                Location: {restaurant.latitude}, {restaurant.longitude}
                             </p>
                             {restaurant.image_url && (
                                 <img
@@ -202,6 +207,11 @@ export default function RestaurantsPage() {
                                     width={400}
                                     className="mb-4"
                                 />
+                            )}
+                            {restaurant.username && (
+                                <p>
+                                    <em>Added by: {restaurant.username}</em>
+                                </p>
                             )}
                             <div
                                 style={{
