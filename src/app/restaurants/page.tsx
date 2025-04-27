@@ -62,6 +62,7 @@ export default function RestaurantsPage() {
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError("");
+        setLoading(true);
 
         //ensure users enter all fields
         const { name, description, latitude, longitude, image_url } = form;
@@ -73,6 +74,7 @@ export default function RestaurantsPage() {
             !image_url.trim()
         ) {
             setError("Please enter all fields");
+            setLoading(false);
             return;
         }
 
@@ -93,6 +95,7 @@ export default function RestaurantsPage() {
             if (!res.ok) {
                 setError(result.error || "Error adding restaurant");
                 toast("Error adding restaurant");
+                setLoading(false);
             } else {
                 //clear the restaurant form
                 setForm({
@@ -104,11 +107,15 @@ export default function RestaurantsPage() {
                 });
                 //fetch restaurants again
                 toast("Restaurant added successfully");
+                setLoading(false);
                 fetchRestaurants();
             }
         } catch (err) {
             setError("Error adding restaurant");
             toast("Error adding restaurant ");
+            setLoading(false);
+        }finally{
+            setLoading(false);
         }
     }
 
@@ -192,7 +199,7 @@ export default function RestaurantsPage() {
                 />
                 <br />
                 <Button className="mb-4 mt-4" type="submit" variant="white">
-                    Add Restaurant
+                    {loading?"Adding Restaurant ... ": "Add Restaurant"}
                 </Button>
             </form>
             {error && <p style={{ color: "red" }}>{error}</p>}
