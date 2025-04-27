@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button"
 function HomePage() {
 	const router = useRouter()
 
-	const handleStrategiesRoute = () => {
-		router.push("/strategies")
+	const handleRestaurantListRoute = () =>{
+		router.push("/restaurants");
 	}
 
 	return (
@@ -17,13 +17,13 @@ function HomePage() {
 
 			<div>
 				<LogoutButton />
-			</div>
+			</div>	
 
 			<div>
-				<Button variant="white" onClick={handleStrategiesRoute}>
-					Strategy Builder
-				</Button>
+				<Button variant={"white"} onClick={handleRestaurantListRoute}>restaurants </Button>
 			</div>
+
+			
 		</div>
 	)
 }

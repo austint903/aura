@@ -2,6 +2,10 @@
 //client component since we need to use useEffect and browser specific APIs
 
 import { useState, useEffect, FormEvent } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+
+import DeleteRestaurantButton from "@/components/DeleteRestaurantButton";
 
 interface Restaurant {
     id: string;
@@ -13,9 +17,10 @@ interface Restaurant {
     total_points: number;
     voted?: boolean; //flag to see if a restaurant is voted for or not
     username?: string; //username of the user who added the restaurant
+    is_owner: boolean;
 }
-
 export default function RestaurantsPage() {
+
     const [form, setForm] = useState({
         name: "",
         description: "",
@@ -87,6 +92,7 @@ export default function RestaurantsPage() {
             const result = await res.json();
             if (!res.ok) {
                 setError(result.error || "Error adding restaurant");
+                toast("Error adding restaurant");
             } else {
                 //clear the restaurant form
                 setForm({
@@ -97,10 +103,12 @@ export default function RestaurantsPage() {
                     image_url: "",
                 });
                 //fetch restaurants again
+                toast("Restaurant added successfully");
                 fetchRestaurants();
             }
         } catch (err) {
             setError("Error adding restaurant");
+            toast("Error adding restaurant ");
         }
     }
 
@@ -183,9 +191,9 @@ export default function RestaurantsPage() {
                     }
                 />
                 <br />
-                <button className="mb-4" type="submit">
+                <Button className="mb-4 mt-4" type="submit" variant="white">
                     Add Restaurant
-                </button>
+                </Button>
             </form>
             {error && <p style={{ color: "red" }}>{error}</p>}
             <h2>Restaurants List</h2>
@@ -236,6 +244,15 @@ export default function RestaurantsPage() {
                                     🚩
                                 </button>
                                 <span>{restaurant.total_points || 0}</span>
+                            </div>
+                            <div>
+                                {/* only display button if posted by current user */}
+                                {restaurant.is_owner && (
+                                    <DeleteRestaurantButton
+                                        restaurantId={restaurant.id}
+                                        onDelete={fetchRestaurants}
+                                    />
+                                )}
                             </div>
                         </li>
                     ))}
