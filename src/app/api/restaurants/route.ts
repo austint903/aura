@@ -21,13 +21,13 @@ export async function GET() {
 export async function POST(request: Request) {
     const supabase = await createClient();
     try {
-        const { name, description, latitude, longitude, image_url } = await request.json();
+        const { name, description, latitude, longitude, image_url, cuisine } = await request.json();
         const user_id=await getCurrentUserIdServer();
         //insert restaurant
         const { data, error } = await supabase
             .from('Restaurants')
             .insert({
-                name, description, latitude, longitude, image_url, user_id
+                name, description, latitude, longitude, image_url, user_id, cuisine,
             })
             .single();
 

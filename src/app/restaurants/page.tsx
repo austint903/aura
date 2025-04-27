@@ -4,6 +4,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 import DeleteRestaurantButton from "@/components/DeleteRestaurantButton";
 
@@ -15,11 +16,23 @@ interface Restaurant {
     longitude: number;
     image_url: string;
     total_points: number;
+    cuisine: string;
     voted?: boolean; //flag to see if a restaurant is voted for or not
     username?: string; //username of the user who added the restaurant
     is_owner: boolean;
 }
 export default function RestaurantsPage() {
+    //add more if needed
+    const cuisineOptions = [
+        "Chinese",
+        "Thai",
+        "Japanese",
+        "Indian",
+        "American",
+        "Soul Food",
+        "Korean",
+        "Mexican",
+    ];
 
     const [form, setForm] = useState({
         name: "",
@@ -27,6 +40,7 @@ export default function RestaurantsPage() {
         latitude: "",
         longitude: "",
         image_url: "",
+        cuisine: "",
     });
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState(false);
@@ -65,13 +79,14 @@ export default function RestaurantsPage() {
         setLoading(true);
 
         //ensure users enter all fields
-        const { name, description, latitude, longitude, image_url } = form;
+        const { name, description, latitude, longitude, image_url, cuisine } = form;
         if (
             !name.trim() ||
             !description.trim() ||
             !latitude.trim() ||
             !longitude.trim() ||
-            !image_url.trim()
+            !image_url.trim() ||
+            !cuisine.trim()
         ) {
             setError("Please enter all fields");
             setLoading(false);
@@ -89,6 +104,7 @@ export default function RestaurantsPage() {
                     latitude: parseFloat(form.latitude),
                     longitude: parseFloat(form.longitude),
                     image_url: form.image_url,
+                    cuisine: form.cuisine,
                 }),
             });
             const result = await res.json();
@@ -104,6 +120,7 @@ export default function RestaurantsPage() {
                     latitude: "",
                     longitude: "",
                     image_url: "",
+                    cuisine: "",
                 });
                 //fetch restaurants again
                 toast("Restaurant added successfully");
@@ -114,7 +131,7 @@ export default function RestaurantsPage() {
             setError("Error adding restaurant");
             toast("Error adding restaurant ");
             setLoading(false);
-        }finally{
+        } finally {
             setLoading(false);
         }
     }
@@ -198,8 +215,35 @@ export default function RestaurantsPage() {
                     }
                 />
                 <br />
+
+                <label htmlFor="cuisine">Cuisine</label>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        {/*either show cuisine selected or select cuisine */}
+                        <Button>
+                            {form.cuisine||"Select cuisine"}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    {/*map over all array elements */}
+                    <DropdownMenuContent className="z-50">
+                        {cuisineOptions.map((c)=>(
+                            //onselect, only update cuisine to what item we have right in the array
+                            <DropdownMenuItem
+                                key={c}
+                                onSelect={()=>
+                                    setForm((prev) => ({ ...prev,cuisine:c}))
+                                }
+                            >
+                                {c}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+
+                <br />
                 <Button className="mb-4 mt-4" type="submit" variant="white">
-                    {loading?"Adding Restaurant ... ": "Add Restaurant"}
+                    {loading ? "Adding Restaurant ... " : "Add Restaurant"}
                 </Button>
             </form>
             {error && <p style={{ color: "red" }}>{error}</p>}
@@ -215,6 +259,7 @@ export default function RestaurantsPage() {
                             <p>
                                 Location: {restaurant.latitude}, {restaurant.longitude}
                             </p>
+                            <p>Cuisine: {restaurant.cuisine}</p>
                             {restaurant.image_url && (
                                 <img
                                     src={restaurant.image_url}
