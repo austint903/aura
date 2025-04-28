@@ -46,11 +46,16 @@ export default function RestaurantsPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    //tracks the filter if selected.
+    const [filterCuisine, setFilterCuisine] = useState<string>("");
+
+    //compute the fetch url based on the state of filter cuisine, if it is filtered, then encode the cusine as part of api link, otherwise just use restauarnat
+    const fetchURL = filterCuisine === "" ? "/api/restaurants" : `/api/restaurants?cuisine=${encodeURIComponent(filterCuisine)}`;
     // fetch restaurants
     async function fetchRestaurants() {
         setLoading(true);
         try {
-            const res = await fetch("/api/restaurants");
+            const res = await fetch(fetchURL);
             const data = await res.json();
             // Map over data to extract the nested username from the Users object.
             // Adjust the property name if your relationship alias is different.
@@ -67,10 +72,11 @@ export default function RestaurantsPage() {
         setLoading(false);
     }
 
-    //runs on component mount
+    //refresh on mount and remounts everytime the filterCuisine updates
+    //filterCuisine in dependency array
     useEffect(() => {
         fetchRestaurants();
-    }, []);
+    }, [filterCuisine]);
 
     //form submission for restaurants
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -221,17 +227,17 @@ export default function RestaurantsPage() {
                     <DropdownMenuTrigger asChild>
                         {/*either show cuisine selected or select cuisine */}
                         <Button>
-                            {form.cuisine||"Select cuisine"}
+                            {form.cuisine || "Select cuisine"}
                         </Button>
                     </DropdownMenuTrigger>
                     {/*map over all array elements */}
                     <DropdownMenuContent className="z-50">
-                        {cuisineOptions.map((c)=>(
+                        {cuisineOptions.map((c) => (
                             //onselect, only update cuisine to what item we have right in the array
                             <DropdownMenuItem
                                 key={c}
-                                onSelect={()=>
-                                    setForm((prev) => ({ ...prev,cuisine:c}))
+                                onSelect={() =>
+                                    setForm((prev) => ({ ...prev, cuisine: c }))
                                 }
                             >
                                 {c}
@@ -247,6 +253,24 @@ export default function RestaurantsPage() {
                 </Button>
             </form>
             {error && <p style={{ color: "red" }}>{error}</p>}
+
+            <h3 className="mt-8 mb-4 text-2xl">Filter by cuisine</h3>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button> {filterCuisine || "All Cuisines"}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="z-50">
+                    <DropdownMenuItem key="all" onSelect={() => setFilterCuisine("")}>All</DropdownMenuItem>
+                    {cuisineOptions.map((c) => (
+                        <DropdownMenuItem
+                            key={c}
+                            onSelect={() => setFilterCuisine(c)}>
+                            {c}</DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+
             <h2>Restaurants List</h2>
             {loading ? (
                 <p>Loading restaurants...</p>

@@ -2,27 +2,40 @@ import { createClient } from "@/auth/server";
 import { NextResponse } from "next/server";
 import { getCurrentUserIdServer } from "@/app/shared/supabase/shared";
 
-export async function GET() {
+export async function GET(request: Request) {
     //fetch restauratnts
     const supabase = await createClient();
     const user_id = await getCurrentUserIdServer();
-    const { data: restaurants, error } = await supabase
-        .from('Restaurants')
-        .select('*, Users(username)');
+    //filter the cuisine by api url link
+    //get new url and get everything after the ? like ?cuisine=Thai
+    const url = new URL(request.url);
+    //only look for the cuisine field and return that value
+    const cuisine = url.searchParams.get("cuisine");
+
+    //select all rows from the resturant, if no cuisine filter is passed 
+    let query = supabase.from("Restaurants").select("*, Users(username)");
+    //if cuisine is passed as a filter
+    if (cuisine) {
+        //append .eq() to the query
+        query = query.eq("cuisine", cuisine);
+    }
+
+    const { data: restaurants, error } = await query;
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
     const mapped = restaurants.map((r) => ({
         ...r,
+        //if created restaurabnt, then have ability to delete, each restarurant now has a boolean of is_owner,
         is_owner: r.user_id === user_id,
-      }));
+    }));
     return NextResponse.json(mapped, { status: 200 });
 }
 export async function POST(request: Request) {
     const supabase = await createClient();
     try {
         const { name, description, latitude, longitude, image_url, cuisine } = await request.json();
-        const user_id=await getCurrentUserIdServer();
+        const user_id = await getCurrentUserIdServer();
         //insert restaurant
         const { data, error } = await supabase
             .from('Restaurants')
@@ -43,33 +56,33 @@ export async function POST(request: Request) {
     }
 }
 
-export async function DELETE(request:Request){
-    try{
+export async function DELETE(request: Request) {
+    try {
         //get the restaurant id
-        const {id}=await request.json();
+        const { id } = await request.json();
 
         if (!id) {
             return NextResponse.json({ error: "Restaurant not found" }, { status: 400 });
         }
-        
+
         //get user id
-        const user_id=await getCurrentUserIdServer();
+        const user_id = await getCurrentUserIdServer();
         if (!user_id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const supabase=await createClient();
+        const supabase = await createClient();
 
         //delete the row
-        const {data,error}=await supabase.from("Restaurants").delete().eq("id",id).eq("user_id",user_id).maybeSingle(); 
-        if(error){
-            return NextResponse.json({error:error.message}, {status:400})
+        const { data, error } = await supabase.from("Restaurants").delete().eq("id", id).eq("user_id", user_id).maybeSingle();
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 400 })
         }
-      
-      
+
+
         return NextResponse.json({ message: "Restaurant deleted successfully" }, { status: 200 });
-        
-    }catch (err) {
+
+    } catch (err) {
         if (err instanceof Error) {
             return NextResponse.json({ error: err.message }, { status: 400 });
         }
