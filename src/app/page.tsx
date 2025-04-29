@@ -1,31 +1,19 @@
-"use client"
-
-import { useRouter } from "next/navigation"
 import LogoutButton from "@/components/LogoutButton"
-import { Button } from "@/components/ui/button"
+import { getCurrentUserIdServer } from "./shared/supabase/shared"
+import ProfileButton from "@/components/ProfileButton";
 
-function HomePage() {
-	const router = useRouter()
-
-	const handleRestaurantListRoute = () =>{
-		router.push("/restaurants");
-	}
-
+export default async function HomePage() {
+	const userId = await getCurrentUserIdServer();
 	return (
 		<div className="text-3xl p-4 space-y-6">
-			<p>Hello</p>
-
+			<p>Home Page</p>
 			<div>
 				<LogoutButton />
-			</div>	
-
-			<div>
-				<Button variant={"white"} onClick={handleRestaurantListRoute}>restaurants </Button>
 			</div>
 
-			
+			<div>
+				{userId && <ProfileButton userId={userId} />}
+			</div>
 		</div>
 	)
 }
-
-export default HomePage
