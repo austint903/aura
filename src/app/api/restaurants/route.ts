@@ -11,6 +11,31 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     //only look for the cuisine field and return that value
     const cuisine = url.searchParams.get("cuisine");
+    const liked = url.searchParams.get("liked")==="true"; 
+
+    //if url has liked 
+    if (liked){
+        //get all restaurant id that have the user id
+        const {data:votes, error:voteErr}=await supabase.from("RestaurantVotes").select("restaurant_id").eq("user_id", user_id);
+        if (voteErr) return NextResponse.json({error:voteErr.message}, {status:500});
+
+        //get array of all restaurant ids
+        const restaurantIDS=votes.map(v=>v.restaurant_id);
+        if (!restaurantIDS.length)return NextResponse.json([],{status:200});
+
+        //query restaurant tables to get all restaurants (info) in the array
+        const {data:restarurants, error:restErr} =await supabase.from("Restaurants").select("*, Users(username)").in("id", restaurantIDS);
+
+        if(restErr) return NextResponse.json({error:restErr.message}, {status:500});
+
+        //return a map of the restaurants to the user
+        return NextResponse.json(
+            restarurants.map((r)=>({
+                ...r,
+                is_owner:r.user_id===user_id,
+            }))
+        )
+    }
 
     //select all rows from the resturant, if no cuisine filter is passed 
     let query = supabase.from("Restaurants").select("*, Users(username)");
