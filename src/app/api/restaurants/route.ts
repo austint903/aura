@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     //only look for the cuisine field and return that value
     const cuisine = url.searchParams.get("cuisine");
     const liked = url.searchParams.get("liked")==="true"; 
+    const school=url.searchParams.get("school");
 
     //if url has liked 
     if (liked){
@@ -44,7 +45,9 @@ export async function GET(request: Request) {
         //append .eq() to the query
         query = query.eq("cuisine", cuisine);
     }
-
+    if (school){
+        query=query.eq("school", school);
+    }
     const { data: restaurants, error } = await query;
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -59,13 +62,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     const supabase = await createClient();
     try {
-        const { name, description, latitude, longitude, image_url, cuisine } = await request.json();
+        const { name, description, latitude, longitude, image_url, cuisine, school} = await request.json();
         const user_id = await getCurrentUserIdServer();
         //insert restaurant
         const { data, error } = await supabase
             .from('Restaurants')
             .insert({
-                name, description, latitude, longitude, image_url, user_id, cuisine,
+                name, description, latitude, longitude, image_url, user_id, cuisine,school
             })
             .single();
 

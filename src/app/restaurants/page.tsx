@@ -17,6 +17,7 @@ interface Restaurant {
     image_url: string;
     total_points: number;
     cuisine: string;
+    school:string;
     voted?: boolean; //flag to see if a restaurant is voted for or not
     username?: string; //username of the user who added the restaurant
     is_owner: boolean;
@@ -34,6 +35,11 @@ export default function RestaurantsPage() {
         "Mexican",
     ];
 
+    const schoolOptions=[
+        "NYU",
+        "Columbia",
+    ];
+
     const [form, setForm] = useState({
         name: "",
         description: "",
@@ -41,6 +47,7 @@ export default function RestaurantsPage() {
         longitude: "",
         image_url: "",
         cuisine: "",
+        school:"",
     });
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState(false);
@@ -49,13 +56,32 @@ export default function RestaurantsPage() {
     //tracks the filter if selected.
     const [filterCuisine, setFilterCuisine] = useState<string>("");
 
-    //compute the fetch url based on the state of filter cuisine, if it is filtered, then encode the cusine as part of api link, otherwise just use restauarnat
-    const fetchURL = filterCuisine === "" ? "/api/restaurants" : `/api/restaurants?cuisine=${encodeURIComponent(filterCuisine)}`;
+    const [filterSchool, setFilterSchool]=useState<string>("");
+
+    const filters={
+        cuisine:filterCuisine||undefined,
+        school:filterSchool||undefined,
+    }
+    //general function to build filter parameters for api url
+    function generalFetchUrl(){
+        const params=new URLSearchParams();
+        for ( const [key,value] of Object.entries(filters)){
+            if (value!=null&&value!=""){
+                //append to params, (key=value)
+                params.append(key,value)
+            }
+        }
+        const final=params.toString();
+        //use /api/restaurants? so everything after ? are parameters
+        return final ? `/api/restaurants?${final}`:"/api/restaurants";
+    }
+    
+
     // fetch restaurants
     async function fetchRestaurants() {
         setLoading(true);
         try {
-            const res = await fetch(fetchURL);
+            const res = await fetch(generalFetchUrl());
             const data = await res.json();
             // Map over data to extract the nested username from the Users object.
             // Adjust the property name if your relationship alias is different.
@@ -76,7 +102,7 @@ export default function RestaurantsPage() {
     //filterCuisine in dependency array
     useEffect(() => {
         fetchRestaurants();
-    }, [filterCuisine]);
+    }, [filterCuisine, filterSchool]);
 
     //form submission for restaurants
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -85,14 +111,15 @@ export default function RestaurantsPage() {
         setLoading(true);
 
         //ensure users enter all fields
-        const { name, description, latitude, longitude, image_url, cuisine } = form;
+        const { name, description, latitude, longitude, image_url, cuisine, school } = form;
         if (
             !name.trim() ||
             !description.trim() ||
             !latitude.trim() ||
             !longitude.trim() ||
             !image_url.trim() ||
-            !cuisine.trim()
+            !cuisine.trim()||
+            !school.trim()
         ) {
             setError("Please enter all fields");
             setLoading(false);
@@ -111,6 +138,7 @@ export default function RestaurantsPage() {
                     longitude: parseFloat(form.longitude),
                     image_url: form.image_url,
                     cuisine: form.cuisine,
+                    school: form.school,
                 }),
             });
             const result = await res.json();
@@ -127,6 +155,7 @@ export default function RestaurantsPage() {
                     longitude: "",
                     image_url: "",
                     cuisine: "",
+                    school:"",
                 });
                 //fetch restaurants again
                 toast("Restaurant added successfully");
@@ -246,6 +275,28 @@ export default function RestaurantsPage() {
                     </DropdownMenuContent>
                 </DropdownMenu>
 
+                <br/>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button>
+                            {form.school||"Select school"}
+                        </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent>
+                        {schoolOptions.map((s)=>(
+                            <DropdownMenuItem
+                                key={s}
+                                onSelect={()=>
+                                    setForm((prev)=>({...prev,school:s}))
+                                }
+                            >
+                                {s}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
 
                 <br />
                 <Button className="mb-4 mt-4" type="submit" variant="white">
@@ -270,6 +321,25 @@ export default function RestaurantsPage() {
                 </DropdownMenuContent>
             </DropdownMenu>
 
+            <br/>
+
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button>{filterSchool||"All Schools"}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="z-50">
+                    <DropdownMenuItem key="all" onSelect={()=>setFilterSchool("")}>All</DropdownMenuItem>
+                    {schoolOptions.map((s)=>(
+                        <DropdownMenuItem
+                            key={s}
+                            onSelect={()=>setFilterSchool(s)}
+                        >
+                            {s}
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+
 
             <h2>Restaurants List</h2>
             {loading ? (
@@ -284,6 +354,7 @@ export default function RestaurantsPage() {
                                 Location: {restaurant.latitude}, {restaurant.longitude}
                             </p>
                             <p>Cuisine: {restaurant.cuisine}</p>
+                            <p>School: {restaurant.school}</p>
                             {restaurant.image_url && (
                                 <img
                                     src={restaurant.image_url}
