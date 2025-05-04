@@ -20,6 +20,7 @@ interface Restaurant {
     school:string;
     voted?: boolean; //flag to see if a restaurant is voted for or not
     username?: string; //username of the user who added the restaurant
+    price:string;
     is_owner: boolean;
 }
 export default function RestaurantsPage() {
@@ -40,6 +41,13 @@ export default function RestaurantsPage() {
         "Columbia",
     ];
 
+    const priceRange=[
+        "$",
+        "$$",
+        "$$$",
+        "$$$$",  
+    ];
+
     const [form, setForm] = useState({
         name: "",
         description: "",
@@ -48,6 +56,7 @@ export default function RestaurantsPage() {
         image_url: "",
         cuisine: "",
         school:"",
+        price:"",
     });
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState(false);
@@ -58,9 +67,12 @@ export default function RestaurantsPage() {
 
     const [filterSchool, setFilterSchool]=useState<string>("");
 
+    const [filterPrice, setFilterPrice]=useState<string>("");
+
     const filters={
         cuisine:filterCuisine||undefined,
         school:filterSchool||undefined,
+        price:filterPrice||undefined
     }
     //general function to build filter parameters for api url
     function generalFetchUrl(){
@@ -102,7 +114,7 @@ export default function RestaurantsPage() {
     //filterCuisine in dependency array
     useEffect(() => {
         fetchRestaurants();
-    }, [filterCuisine, filterSchool]);
+    }, [filterCuisine, filterSchool, filterPrice]);
 
     //form submission for restaurants
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -111,7 +123,7 @@ export default function RestaurantsPage() {
         setLoading(true);
 
         //ensure users enter all fields
-        const { name, description, latitude, longitude, image_url, cuisine, school } = form;
+        const { name, description, latitude, longitude, image_url, cuisine, school,price } = form;
         if (
             !name.trim() ||
             !description.trim() ||
@@ -119,7 +131,8 @@ export default function RestaurantsPage() {
             !longitude.trim() ||
             !image_url.trim() ||
             !cuisine.trim()||
-            !school.trim()
+            !school.trim()||
+            !price.trim()
         ) {
             setError("Please enter all fields");
             setLoading(false);
@@ -139,6 +152,7 @@ export default function RestaurantsPage() {
                     image_url: form.image_url,
                     cuisine: form.cuisine,
                     school: form.school,
+                    price:form.price,
                 }),
             });
             const result = await res.json();
@@ -156,6 +170,7 @@ export default function RestaurantsPage() {
                     image_url: "",
                     cuisine: "",
                     school:"",
+                    price:"",
                 });
                 //fetch restaurants again
                 toast("Restaurant added successfully");
@@ -296,6 +311,22 @@ export default function RestaurantsPage() {
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
+                <br/>
+
+                <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button>{form.price||"Select price range"}</Button>
+                        </DropdownMenuTrigger>
+                        
+                        <DropdownMenuContent className="z-50">
+                            {priceRange.map((p)=>(
+                                <DropdownMenuItem key={p} onSelect={()=>setForm((prev)=>({...prev,price:p}))}>
+                                    {p}
+                                </DropdownMenuItem>
+                            ))}
+
+                        </DropdownMenuContent>
+                </DropdownMenu>
 
 
                 <br />
@@ -336,6 +367,20 @@ export default function RestaurantsPage() {
                         >
                             {s}
                         </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <br/>
+
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button>{filterPrice||"All prices"}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="z-50">
+                    <DropdownMenuItem key="all" onSelect={()=>setFilterPrice("")}>All</DropdownMenuItem>
+                    {priceRange.map((p)=>(
+                        <DropdownMenuItem key={p} onSelect={()=>setFilterPrice(p)}>{p}</DropdownMenuItem>
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
